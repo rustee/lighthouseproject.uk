@@ -4,7 +4,13 @@
 //
 // Place your own custom CSS or SCSS rules below this line, these rules will override any Bootstrap and theme variables.
 
-@import url('https://fonts.cdnfonts.com/css/marion');
+@font-face {
+  font-family: 'Marion';
+  src: url('marion_regular-webfont.woff2') format('woff2'),
+       url('marion_regular-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
 
 .navbar-brand-img {
     max-height: 4rem;
