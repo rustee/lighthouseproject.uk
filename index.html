@@ -224,10 +224,50 @@
         transition: border-color 0.2s;
       }
       .lh-popup-link:hover { border-color: #1e3d53; color: #1e3d53; text-decoration: none; }
+      /* Reel thumbnail with play button */
+      .lh-reel-wrap { position: relative; display: block; }
+      .lh-reel-overlay {
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(0,0,0,0.12);
+        transition: background 0.2s;
+        text-decoration: none;
+      }
+      .lh-reel-overlay:hover { background: rgba(0,0,0,0.28); }
+      .lh-play-btn {
+        width: 42px; height: 42px; border-radius: 50%;
+        background: rgba(255,255,255,0.92);
+        display: flex; align-items: center; justify-content: center;
+        color: #1e3d53; font-size: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+        transition: transform 0.15s;
+        padding-left: 3px;
+      }
+      .lh-reel-overlay:hover .lh-play-btn { transform: scale(1.12); }
+      .lh-instagram-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 0.72rem; color: #C13584;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(193,53,132,0.3);
+        margin-left: 10px;
+        transition: border-color 0.2s;
+      }
+      .lh-instagram-link:hover { border-color: #C13584; color: #C13584; text-decoration: none; }
       /* Responsive — disable fixed height on small screens */
       @media (max-width: 767px) {
         .map-section { height: 85vh; }
-        .map-info-panel { top: 70px; left: 10px; right: 10px; max-width: none; }
+        .map-info-panel {
+          top: 70px;
+          left: 10px;
+          right: auto;
+          max-width: 160px;
+          padding: 10px 12px;
+        }
+        .map-info-panel h3 { font-size: 0.72rem; }
+        .map-info-panel .map-subtitle { display: none; }
+        .map-progress-bar { margin-bottom: 8px; }
+        .map-legend-item { font-size: 0.65rem; }
+        .map-legend-dot { width: 9px; height: 9px; }
       }
     </style>
 
@@ -441,6 +481,7 @@
         {
           id: 'lizard',
           visited: true,
+          reel: 'CtUdYNKOC5z',
           name: 'Lizard Lighthouse',
           lat: 49.9596, lng: -5.2005,
           county: 'Cornwall',
@@ -478,6 +519,7 @@
         {
           id: 'tater-du',
           visited: true,
+          reel: 'CtTdboRL1gZ',
           name: 'Tater Du Lighthouse',
           lat: 50.0511, lng: -5.5593,
           county: 'Cornwall',
@@ -503,6 +545,7 @@
         {
           id: 'pendeen',
           visited: true,
+          reel: 'CtKN54OPvF5',
           name: 'Pendeen Lighthouse',
           lat: 50.1483, lng: -5.6411,
           county: 'Cornwall',
@@ -516,6 +559,7 @@
         {
           id: 'godrevy',
           visited: true,
+          reel: 'CtWTeHAPPVJ',
           name: 'Godrevy Lighthouse',
           lat: 50.2453, lng: -5.3997,
           county: 'Cornwall',
@@ -580,6 +624,7 @@
         {
           id: 'start-point',
           visited: true,
+          reel: 'CyOkGOVLxmU',
           name: 'Start Point Lighthouse',
           lat: 50.2218, lng: -3.6446,
           county: 'Devon',
@@ -605,6 +650,7 @@
         {
           id: 'berry-head',
           visited: true,
+          reel: 'DKaJ9GsIcSg',
           name: 'Berry Head Lighthouse',
           lat: 50.3972, lng: -3.4825,
           county: 'Devon',
@@ -657,6 +703,7 @@
         {
           id: 'crow-point',
           visited: true,
+          reel: 'CxTWSvWr43F',
           name: 'Crow Point Lighthouse',
           lat: 51.0769, lng: -4.2444,
           county: 'Devon',
@@ -695,6 +742,7 @@
         {
           id: 'lundy-north',
           visited: true,
+          reel: 'DOpwiNIAgK-',
           name: 'Lundy North Lighthouse',
           lat: 51.1988, lng: -4.6644,
           county: 'Lundy Island',
@@ -734,6 +782,7 @@
         {
           id: 'anvil-point',
           visited: true,
+          reel: 'C8FiolUILQw',
           name: 'Anvil Point Lighthouse',
           lat: 50.5975, lng: -1.9550,
           county: 'Dorset',
@@ -791,8 +840,16 @@
         var badgeClass = status === 'visited' ? 'visited' : 'scheduled';
         var badgeLabel = status === 'visited' ? 'Visited' : 'Scheduled';
 
+        var reelUrl = lh.reel ? 'https://www.instagram.com/reel/' + lh.reel + '/' : null;
+        var reelThumb = lh.reel ? 'assets/images/reels/' + lh.id + '.jpg' : null;
+
         var imgHTML;
-        if (lh.image) {
+        if (reelThumb) {
+          imgHTML = '<a href="' + reelUrl + '" target="_blank" rel="noopener" class="lh-reel-wrap">'
+            + '<img src="' + reelThumb + '" class="lh-popup-img" alt="' + lh.name + ' Instagram reel">'
+            + '<div class="lh-reel-overlay"><div class="lh-play-btn">&#9654;</div></div>'
+            + '</a>';
+        } else if (lh.image) {
           imgHTML = '<img src="' + lh.image + '" class="lh-popup-img" alt="' + lh.name + '"'
             + ' onerror="this.style.display=\'none\'">';
         } else {
@@ -817,6 +874,7 @@
           + '<p class="lh-popup-desc">' + lh.description + '</p>'
           + (specsHTML ? '<div class="lh-popup-specs">' + specsHTML + '</div>' : '')
           + '<a href="' + lh.url + '" target="_blank" rel="noopener" class="lh-popup-link">View on Trinity House ↗</a>'
+          + (reelUrl ? '<a href="' + reelUrl + '" target="_blank" rel="noopener" class="lh-instagram-link"><i class="fab fa-instagram"></i> Watch reel</a>' : '')
           + '</div>'
           + '</div>';
       }
