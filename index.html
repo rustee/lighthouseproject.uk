@@ -140,11 +140,11 @@
         padding: 0 !important;
         overflow: hidden;
         box-shadow: 0 8px 32px rgba(0,0,0,0.28) !important;
-        max-width: 300px;
+        max-width: 420px !important;
       }
       .leaflet-popup-content {
         margin: 0 !important;
-        width: 280px !important;
+        width: auto !important;
       }
       .lh-popup-img {
         width: 100%;
@@ -224,10 +224,33 @@
         transition: border-color 0.2s;
       }
       .lh-popup-link:hover { border-color: #1e3d53; color: #1e3d53; text-decoration: none; }
+      /* Side-by-side layout for video reels */
+      .lh-popup-layout {
+        display: flex;
+        flex-direction: row;
+        width: 360px;
+      }
+      .lh-popup-video-col {
+        width: 135px;
+        flex-shrink: 0;
+        background: #000;
+      }
+      .lh-popup-text-col {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 240px; /* matches video height: 135 * 16/9 */
+        box-sizing: border-box;
+      }
+      /* Stacked layout (Wikimedia image or reel thumbnail) */
+      .lh-popup-stacked { width: 280px; }
       /* Reel video player */
       .lh-reel-video {
-        width: 100%; height: 240px;
-        object-fit: cover; display: block; background: #000;
+        width: 100%;
+        aspect-ratio: 9 / 16;
+        height: auto;
+        object-fit: contain;
+        display: block;
+        background: #000;
       }
       /* Thumbnail + play button fallback (no local MP4) */
       .lh-reel-wrap { position: relative; display: block; }
@@ -273,6 +296,10 @@
         .map-progress-bar { margin-bottom: 8px; }
         .map-legend-item { font-size: 0.65rem; }
         .map-legend-dot { width: 9px; height: 9px; }
+        /* Narrow video popup on small screens */
+        .lh-popup-layout { width: 300px; }
+        .lh-popup-video-col { width: 112px; }
+        .lh-popup-text-col { max-height: 199px; } /* 112 * 16/9 ≈ 199 */
       }
     </style>
 
@@ -852,13 +879,36 @@
         var reelUrl = lh.reel ? 'https://www.instagram.com/reel/' + lh.reel + '/' : null;
         var reelThumb = lh.reel ? 'assets/images/reels/' + lh.id + '.jpg' : null;
 
-        var imgHTML;
+        var specsHTML = '';
+        if (lh.built) specsHTML += '<div class="lh-spec-item"><strong>Built:</strong> ' + lh.built + '</div>';
+        if (lh.height) specsHTML += '<div class="lh-spec-item"><strong>Height:</strong> ' + lh.height + '</div>';
+        if (lh.character) specsHTML += '<div class="lh-spec-item"><strong>Character:</strong> ' + lh.character + '</div>';
+        if (lh.range) specsHTML += '<div class="lh-spec-item"><strong>Range:</strong> ' + lh.range + '</div>';
+        if (lh.automated) specsHTML += '<div class="lh-spec-item"><strong>Automated:</strong> ' + lh.automated + '</div>';
+
+        var bodyHTML = '<div class="lh-popup-title-row">'
+          + '<h4 class="lh-popup-name">' + lh.name + '</h4>'
+          + '<button class="lh-status-badge ' + badgeClass + '" data-lh-id="' + lh.id + '">' + badgeLabel + '</button>'
+          + '</div>'
+          + '<p class="lh-popup-location"><i class="fas fa-map-marker-alt" style="color:#1e3d53;margin-right:4px;font-size:.65rem"></i>' + lh.county + '</p>'
+          + '<p class="lh-popup-desc">' + lh.description + '</p>'
+          + (specsHTML ? '<div class="lh-popup-specs">' + specsHTML + '</div>' : '')
+          + '<a href="' + lh.url + '" target="_blank" rel="noopener" class="lh-popup-link">View on Trinity House ↗</a>'
+          + (reelUrl ? '<a href="' + reelUrl + '" target="_blank" rel="noopener" class="lh-instagram-link"><i class="fab fa-instagram"></i> Watch reel</a>' : '');
+
         if (lh.reel && lh.video) {
-          imgHTML = '<video class="lh-reel-video" controls playsinline preload="none"'
-            + ' poster="' + reelThumb + '">'
+          return '<div class="lh-popup-layout">'
+            + '<div class="lh-popup-video-col">'
+            + '<video class="lh-reel-video" controls playsinline preload="none" poster="' + reelThumb + '">'
             + '<source src="assets/video/reels/' + lh.id + '.mp4" type="video/mp4">'
-            + '</video>';
-        } else if (reelThumb) {
+            + '</video>'
+            + '</div>'
+            + '<div class="lh-popup-text-col lh-popup-body">' + bodyHTML + '</div>'
+            + '</div>';
+        }
+
+        var imgHTML;
+        if (reelThumb) {
           imgHTML = '<a href="' + reelUrl + '" target="_blank" rel="noopener" class="lh-reel-wrap">'
             + '<img src="' + reelThumb + '" class="lh-popup-img" alt="' + lh.name + ' Instagram reel">'
             + '<div class="lh-reel-overlay"><div class="lh-play-btn">&#9654;</div></div>'
@@ -870,26 +920,9 @@
           imgHTML = '<div class="lh-popup-img-missing">&#9956;</div>';
         }
 
-        var specsHTML = '';
-        if (lh.built) specsHTML += '<div class="lh-spec-item"><strong>Built:</strong> ' + lh.built + '</div>';
-        if (lh.height) specsHTML += '<div class="lh-spec-item"><strong>Height:</strong> ' + lh.height + '</div>';
-        if (lh.character) specsHTML += '<div class="lh-spec-item"><strong>Character:</strong> ' + lh.character + '</div>';
-        if (lh.range) specsHTML += '<div class="lh-spec-item"><strong>Range:</strong> ' + lh.range + '</div>';
-        if (lh.automated) specsHTML += '<div class="lh-spec-item"><strong>Automated:</strong> ' + lh.automated + '</div>';
-
-        return '<div>'
+        return '<div class="lh-popup-stacked">'
           + imgHTML
-          + '<div class="lh-popup-body">'
-          + '<div class="lh-popup-title-row">'
-          + '<h4 class="lh-popup-name">' + lh.name + '</h4>'
-          + '<button class="lh-status-badge ' + badgeClass + '" data-lh-id="' + lh.id + '">' + badgeLabel + '</button>'
-          + '</div>'
-          + '<p class="lh-popup-location"><i class="fas fa-map-marker-alt" style="color:#1e3d53;margin-right:4px;font-size:.65rem"></i>' + lh.county + '</p>'
-          + '<p class="lh-popup-desc">' + lh.description + '</p>'
-          + (specsHTML ? '<div class="lh-popup-specs">' + specsHTML + '</div>' : '')
-          + '<a href="' + lh.url + '" target="_blank" rel="noopener" class="lh-popup-link">View on Trinity House ↗</a>'
-          + (reelUrl ? '<a href="' + reelUrl + '" target="_blank" rel="noopener" class="lh-instagram-link"><i class="fab fa-instagram"></i> Watch reel</a>' : '')
-          + '</div>'
+          + '<div class="lh-popup-body">' + bodyHTML + '</div>'
           + '</div>';
       }
 
