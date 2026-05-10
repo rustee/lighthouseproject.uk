@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-GB" class="no-js">
   <head>
 
@@ -19,11 +19,217 @@
     <link rel="stylesheet" href="assets/vendor/font-awesome/css/all.min.css" type="text/css">
     <link rel="stylesheet" href="assets/vendor/themify-icons/css/themify-icons.css" type="text/css">
 
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700%7CMontserrat:200,300,400,500,700&display=swap">
 
     <!-- Theme CSS -->
     <link rel="stylesheet" href="assets/css/lighthouse-project.css">
+
+    <style>
+      /* ── Map section ── */
+      .map-section {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #lighthouse-map {
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+      /* Map overlay card */
+      .map-info-panel {
+        position: absolute;
+        top: 90px;
+        left: 20px;
+        z-index: 800;
+        background: rgba(3, 5, 7, 0.82);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.08);
+        max-width: 240px;
+        pointer-events: none;
+      }
+      .map-info-panel h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin: 0 0 4px;
+        color: #fff;
+      }
+      .map-info-panel .map-subtitle {
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.55);
+        margin: 0 0 14px;
+      }
+      .map-info-panel .progress-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+      .map-info-panel .progress-label {
+        font-size: 0.72rem;
+        color: rgba(255,255,255,0.7);
+      }
+      .map-info-panel .progress-count {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #fff;
+      }
+      .map-progress-bar {
+        width: 100%;
+        height: 4px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+      .map-progress-bar-inner {
+        height: 100%;
+        background: #21ce5b;
+        border-radius: 2px;
+        transition: width 0.5s ease;
+      }
+      /* Legend */
+      .map-legend {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .map-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.72rem;
+        color: rgba(255,255,255,0.75);
+      }
+      .map-legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        border: 2px solid rgba(255,255,255,0.5);
+      }
+      .dot-visited  { background: #21ce5b; }
+      .dot-scheduled { background: #f9ad3e; }
+      /* Custom markers */
+      .lh-marker-wrap {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2.5px solid rgba(255,255,255,0.9);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+      .lh-marker-wrap:hover { transform: scale(1.3); }
+      .lh-marker-visited   { background: #21ce5b; }
+      .lh-marker-scheduled { background: #f9ad3e; }
+      /* Popup */
+      .leaflet-popup-content-wrapper {
+        border-radius: 8px !important;
+        padding: 0 !important;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.28) !important;
+        max-width: 300px;
+      }
+      .leaflet-popup-content {
+        margin: 0 !important;
+        width: 280px !important;
+      }
+      .lh-popup-img {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        display: block;
+        background: #1e3d53;
+      }
+      .lh-popup-img-missing {
+        width: 100%;
+        height: 120px;
+        background: #1e3d53;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.25);
+        font-size: 2.5rem;
+      }
+      .lh-popup-body {
+        padding: 14px 16px 16px;
+      }
+      .lh-popup-title-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .lh-popup-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #030507;
+        line-height: 1.25;
+        margin: 0;
+      }
+      .lh-status-badge {
+        flex-shrink: 0;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: 20px;
+        cursor: pointer;
+        border: none;
+        outline: none;
+        line-height: 1.4;
+      }
+      .lh-status-badge.visited  { background: #d4f8e3; color: #0c7a38; }
+      .lh-status-badge.scheduled { background: #fef3dc; color: #a1640a; }
+      .lh-popup-location {
+        font-size: 0.75rem;
+        color: #768394;
+        margin: 0 0 8px;
+      }
+      .lh-popup-desc {
+        font-size: 0.78rem;
+        color: #4a5260;
+        line-height: 1.5;
+        margin: 0 0 10px;
+      }
+      .lh-popup-specs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 12px;
+        font-size: 0.72rem;
+        margin-bottom: 12px;
+      }
+      .lh-spec-item { color: #4a5260; }
+      .lh-spec-item strong { color: #030507; }
+      .lh-popup-link {
+        display: inline-block;
+        font-size: 0.72rem;
+        color: #1e3d53;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(30,61,83,0.3);
+        transition: border-color 0.2s;
+      }
+      .lh-popup-link:hover { border-color: #1e3d53; color: #1e3d53; text-decoration: none; }
+      /* Responsive — disable fixed height on small screens */
+      @media (max-width: 767px) {
+        .map-section { height: 85vh; }
+        .map-info-panel { top: 70px; left: 10px; right: 10px; max-width: none; }
+      }
+    </style>
 
   </head>
   <body class="layout-wide">
@@ -60,6 +266,9 @@
           </li>
           <li class="nav-item" data-menuanchor="the-mission">
             <a class="nav-link" href="#the-mission">The mission</a>
+          </li>
+          <li class="nav-item" data-menuanchor="the-map">
+            <a class="nav-link" href="#the-map">The map</a>
           </li>
         </ul>
 
@@ -132,6 +341,39 @@
         </div>
       </section>
 
+      <!-- Section - The Map -->
+      <section class="ln-section" data-anchor="the-map" data-tooltip="The map" data-ui="dark" data-navbar="navbar-light" style="padding:0; overflow:hidden;">
+        <div class="map-section">
+
+          <!-- Info panel overlay -->
+          <div class="map-info-panel" id="mapInfoPanel">
+            <h3>South West England</h3>
+            <p class="map-subtitle">Trinity House lighthouses</p>
+            <div class="progress-line">
+              <span class="progress-label">Visited</span>
+              <span class="progress-count" id="visitedCount">0 / 24</span>
+            </div>
+            <div class="map-progress-bar">
+              <div class="map-progress-bar-inner" id="progressBarInner" style="width:0%"></div>
+            </div>
+            <div class="map-legend">
+              <div class="map-legend-item">
+                <div class="map-legend-dot dot-visited"></div>
+                <span>Visited</span>
+              </div>
+              <div class="map-legend-item">
+                <div class="map-legend-dot dot-scheduled"></div>
+                <span>Scheduled</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Leaflet map -->
+          <div id="lighthouse-map"></div>
+
+        </div>
+      </section>
+
     </div>
 
     <!-- Footer -->
@@ -155,8 +397,6 @@
     <!-- Fullpage - Social icons -->
     <nav class="ln-social-icons">
       <ul class="mx-auto">
-        <!-- <li><a href="#!"><i class="fab fa-facebook-f"></i></a></li>
-        <li><a href="#!"><i class="fab fa-twitter"></i></a></li> -->
         <li><a href="https://www.instagram.com/lighthouseproject.uk"><i class="fab fa-instagram"></i></a></li>
       </ul>
     </nav>
@@ -185,6 +425,502 @@
     <!-- Theme JS -->
     <script src="assets/js/main.js"></script>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Lighthouse Map -->
+    <script>
+    (function () {
+      'use strict';
+
+      // ── Lighthouse data ──────────────────────────────────────────────────────
+      // Source: Trinity House (trinityhouse.co.uk)
+      // Status is persisted in localStorage; all default to 'scheduled'
+      var LIGHTHOUSES = [
+        // Cornwall
+        {
+          id: 'lizard',
+          visited: true,
+          name: 'Lizard Lighthouse',
+          lat: 49.9596, lng: -5.2005,
+          county: 'Cornwall',
+          built: 1752, automated: 1998,
+          height: '19m tower · 70m above MHW',
+          character: 'Fl 3s', range: '26 nm',
+          description: 'Marks the most southerly point of mainland Britain. Originally built by Thomas Fonnereau in 1752, Trinity House assumed control in 1771. Twin towers, now a Heritage Centre.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/lizard-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Lizard_Lighthouse.jpg'
+        },
+        {
+          id: 'longships',
+          name: 'Longships Lighthouse',
+          lat: 50.0436, lng: -5.7483,
+          county: 'Cornwall',
+          built: 1875, automated: 1988,
+          height: '35m tower · 35m above MHW',
+          character: 'Fl (2) WR 10s', range: '15 nm',
+          description: 'A circular grey granite tower a mile off Land\'s End, designed by Sir James Douglass. Marks rocks where countless ships have been lost in heavy seas.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/longships-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Longships_lighthouse.jpg'
+        },
+        {
+          id: 'wolf-rock',
+          name: 'Wolf Rock Lighthouse',
+          lat: 49.9577, lng: -5.6484,
+          county: 'Cornwall',
+          built: 1869, automated: 1988,
+          height: '41m tower · 34m above MHW',
+          character: 'Fl 15s', range: '16 nm',
+          description: 'Eight nautical miles off Land\'s End. In 1972 became the first rock lighthouse to have a helideck built on top of the lantern housing.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/wolf-rock-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Wolf_Rock_Lighthouse_(9336306440).jpg'
+        },
+        {
+          id: 'tater-du',
+          visited: true,
+          name: 'Tater Du Lighthouse',
+          lat: 50.0511, lng: -5.5593,
+          county: 'Cornwall',
+          built: 1965, automated: 1965,
+          height: '15m tower · 34m above MHW',
+          character: 'Fl (3) 15s', range: '20 nm',
+          description: 'One of the last lighthouses built by Trinity House, opened by HRH The Duke of Gloucester in 1965. A red sector light warns of the Runnelstone Rocks.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/tater-du-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Tater_Du_lighthouse.jpg'
+        },
+        {
+          id: 'st-anthony',
+          name: 'St. Anthony Lighthouse',
+          lat: 50.1496, lng: -5.0083,
+          county: 'Cornwall',
+          built: 1835, automated: 1987,
+          height: '19m tower · 22m above MHW',
+          character: 'Iso WR 15s', range: '16 nm',
+          description: 'Guards the eastern entrance to Falmouth Harbour and guides vessels past the hazardous Manacles rocks off the Lizard Peninsula.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/st-anthony-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/St_Anthony_Head_Lighthouse.jpg'
+        },
+        {
+          id: 'pendeen',
+          visited: true,
+          name: 'Pendeen Lighthouse',
+          lat: 50.1483, lng: -5.6411,
+          county: 'Cornwall',
+          built: 1900, automated: 1995,
+          height: '17m tower · 59m above MHW',
+          character: 'Fl (4) 15s', range: '16 nm',
+          description: 'Built to guide vessels around the inhospitable shoreline from Pendeen to Gurnards Head, where many ships were lost on the sunken rocks before its construction.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/pendeen-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Pendeen_Lighthouse.jpg'
+        },
+        {
+          id: 'godrevy',
+          visited: true,
+          name: 'Godrevy Lighthouse',
+          lat: 50.2453, lng: -5.3997,
+          county: 'Cornwall',
+          built: 1859, automated: 1939,
+          height: '26m tower · 28m above MHW',
+          character: 'Fl WR 10s', range: '8 nm',
+          description: 'A white octagonal rubble-stone tower in St. Ives Bay, marking the Stones reef. Said to have inspired Virginia Woolf\'s novel "To the Lighthouse".',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/godrevy-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Godrevy_Lighthouse.jpg'
+        },
+        {
+          id: 'trevose-head',
+          visited: true,
+          name: 'Trevose Head Lighthouse',
+          lat: 50.5480, lng: -5.0334,
+          county: 'Cornwall',
+          built: 1847, automated: 1995,
+          height: '27m tower · 62m above MHW',
+          character: 'Fl 7.5s', range: '18 nm',
+          description: 'Stands on the north-west extremity of Trevose Head, among gigantic cliffs of grey granite rising sheer from the sea. Frequently shrouded in sea mist.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/trevose-head',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Trevose_Head_lighthouse.jpg'
+        },
+        // Isles of Scilly
+        {
+          id: 'bishop-rock',
+          name: 'Bishop Rock Lighthouse',
+          lat: 49.8727, lng: -6.4443,
+          county: 'Isles of Scilly',
+          built: 1858, automated: 1992,
+          height: '49m tower · 44m above MHW',
+          character: 'Fl (2) 15s', range: '20 nm',
+          description: 'Four miles west of the Isles of Scilly, built on a rocky ledge 46m × 16m. One of the most exposed lighthouse sites in the world, reinforced in 1887 to withstand extreme Atlantic waves.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/bishop-rock-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Bishop_Rock_Lighthouse.jpg'
+        },
+        {
+          id: 'round-island',
+          name: 'Round Island Lighthouse',
+          lat: 49.9875, lng: -6.3200,
+          county: 'Isles of Scilly',
+          built: 1887, automated: 1987,
+          height: '19m tower · 55m above MHW',
+          character: 'Fl 10s', range: '18 nm',
+          description: 'Marks the northern approaches to the Isles of Scilly, perched atop a 40m mass of granite. Engineered by William Tregarthen Douglass. Access via rock-cut steps or helicopter.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/round-island-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Round_Island_lighthouse.jpg'
+        },
+        {
+          id: 'peninnis',
+          name: 'Peninnis Lighthouse',
+          lat: 49.9051, lng: -6.3112,
+          county: 'Isles of Scilly',
+          built: 1911, automated: 1911,
+          height: '14m tower · 36m above MHW',
+          character: 'Fl 20s', range: '9 nm',
+          description: 'A slender metal tower on St. Mary\'s, upper half white, lower half and cupola black. Replaced the historic St. Agnes lighthouse, established 1680.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/peninnis-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Peninnis_Head_lighthouse.jpg'
+        },
+        // Devon
+        {
+          id: 'start-point',
+          visited: true,
+          name: 'Start Point Lighthouse',
+          lat: 50.2218, lng: -3.6446,
+          county: 'Devon',
+          built: 1836, automated: 1993,
+          height: '28m tower · 62m above MHW',
+          character: 'Fl (3) 10s', range: '25 nm',
+          description: 'Designed by James Walker with a distinctive gothic battlemented parapet. Start Point juts almost a mile into the sea on the south side of Start Bay near Dartmouth.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/start-point-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Start_Point_Lighthouse,_Hallsands,_Devon_-_geograph.org.uk_-_4664809.jpg'
+        },
+        {
+          id: 'eddystone',
+          name: 'Eddystone Lighthouse',
+          lat: 50.1953, lng: -4.2161,
+          county: 'Devon',
+          built: 1882, automated: 1982,
+          height: '49m tower · 41m above MHW',
+          character: 'Fl (2) 10s', range: '17 nm',
+          description: '13 miles south-west of Plymouth, on the notorious Eddystone Rocks. Became the first Trinity House rock lighthouse to be automated in 1982. The previous Smeaton tower now stands on Plymouth Hoe.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/eddystone-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Eddystone_Lighthouse.jpg'
+        },
+        {
+          id: 'berry-head',
+          visited: true,
+          name: 'Berry Head Lighthouse',
+          lat: 50.3972, lng: -3.4825,
+          county: 'Devon',
+          built: 1906, automated: 1921,
+          height: '5m tower · 58m above MHW',
+          character: 'Fl (2) 15s', range: '19 nm',
+          description: 'One of the smallest lighthouse towers in the British Isles at just 5 metres, yet one of the highest lights — perched atop Berry Head\'s near-perpendicular limestone cliffs.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/berry-head-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Berry_Head_lighthouse.jpg'
+        },
+        {
+          id: 'bull-point',
+          visited: true,
+          name: 'Bull Point Lighthouse',
+          lat: 51.1944, lng: -4.1997,
+          county: 'Devon',
+          built: 1975, automated: 1975,
+          height: '11m tower · 54m above MHW',
+          character: 'Fl (3) 10s', range: '20 nm',
+          description: 'Guides vessels along the North Devon coast. The 1975 structure replaced the 1879 original, which had to be abandoned after coastal erosion undermined its foundations.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/bull-point-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Bull_Point_lighthouse.jpg'
+        },
+        {
+          id: 'hartland-point',
+          visited: true,
+          name: 'Hartland Point Lighthouse',
+          lat: 51.0140, lng: -4.5303,
+          county: 'Devon',
+          built: 1874, automated: 1984,
+          height: '19m tower · 30m above MHW',
+          character: 'Fl (6) 15s', range: '8 nm',
+          description: 'Built on a rocky tip of the point to guide vessels entering the Bristol Channel. Engineered by Sir James Douglass; a 30-metre sea wall was added in 1925 to combat erosion.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/hartland-point-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Hartland_Point_Lighthouse.jpg'
+        },
+        {
+          id: 'lynmouth-foreland',
+          visited: true,
+          name: 'Lynmouth Foreland Lighthouse',
+          lat: 51.2328, lng: -3.7831,
+          county: 'Devon',
+          built: 1900, automated: 1994,
+          height: '15m tower · 67m above MHW',
+          character: 'Fl (4) 15s', range: '18 nm',
+          description: 'A round white tower two miles ENE of Lynmouth on the headland extremity, serving as a vital navigation aid in the Bristol Channel.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/lynmouth-foreland-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Foreland_Point_lighthouse.jpg'
+        },
+        {
+          id: 'crow-point',
+          visited: true,
+          name: 'Crow Point Lighthouse',
+          lat: 51.0769, lng: -4.2444,
+          county: 'Devon',
+          built: 1954, automated: 1954,
+          height: '5m tower · 7.6m above MHW',
+          character: 'Fl WR 2.5s', range: '6 nm',
+          description: 'A small tubular steel structure at the entrance to the Taw and Torridge estuary, guiding maritime traffic into the rivers that serve Barnstaple and Bideford.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/crow-point-lighthouse',
+          image: null
+        },
+        {
+          id: 'instow-front',
+          name: 'Instow Front Lighthouse',
+          lat: 51.0534, lng: -4.1875,
+          county: 'Devon',
+          built: 1820, automated: null,
+          height: '22m above MHW',
+          character: 'Oc 6s', range: '15 nm',
+          description: 'Works in tandem with the Instow Rear Lighthouse to provide a leading line for vessels navigating into the Taw and Torridge Estuary. The original 1820 structure was destroyed in storms in 1990.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/instow-front-lighthouse',
+          image: null
+        },
+        {
+          id: 'instow-rear',
+          name: 'Instow Rear Lighthouse',
+          lat: 51.0557, lng: -4.1902,
+          county: 'Devon',
+          built: 1820, automated: null,
+          height: null,
+          character: null, range: null,
+          description: 'Paired with Instow Front Lighthouse to provide a leading line guiding vessels safely into the Taw and Torridge Estuary.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/instow-rear-lighthouse',
+          image: null
+        },
+        // Lundy Island
+        {
+          id: 'lundy-north',
+          visited: true,
+          name: 'Lundy North Lighthouse',
+          lat: 51.1988, lng: -4.6644,
+          county: 'Lundy Island',
+          built: 1897, automated: 1985,
+          height: '17m tower · 48m above MHW',
+          character: 'Fl 15s', range: '17 nm',
+          description: 'Marks the north extremity of Lundy Island at the mouth of the Bristol Channel — a rugged mass of dark granite surrounded by reefs of sharp rocks.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/lundy-north-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/North_Light,_Lundy.jpg'
+        },
+        {
+          id: 'lundy-south',
+          visited: true,
+          name: 'Lundy South Lighthouse',
+          lat: 51.1597, lng: -4.6683,
+          county: 'Lundy Island',
+          built: 1897, automated: 1985,
+          height: '16m tower · 53m above MHW',
+          character: 'Fl 5s', range: '15 nm',
+          description: 'A compact white circular tower on the southern tip of Lundy Island. Built to replace an 1819 structure after the loss of the brig Miriam in 1828 prompted urgent action.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/lundy-south-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/South_Light,_Lundy.jpg'
+        },
+        // Dorset
+        {
+          id: 'portland-bill',
+          name: 'Portland Bill Lighthouse',
+          lat: 50.5153, lng: -2.4579,
+          county: 'Dorset',
+          built: 1906, automated: 1996,
+          height: '41m tower · 43m above MHW',
+          character: 'Fl (4) 20s', range: '18 nm',
+          description: 'Guards vessels navigating the treacherous Portland Race, where dangerous tidal races form around the Bill near the Shambles sandbank. A landmark on the Jurassic Coast.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/portland-bill-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Portland_Bill_Lighthouse.jpg'
+        },
+        {
+          id: 'anvil-point',
+          visited: true,
+          name: 'Anvil Point Lighthouse',
+          lat: 50.5975, lng: -1.9550,
+          county: 'Dorset',
+          built: 1881, automated: 1991,
+          height: '12m tower · 45m above MHW',
+          character: 'Fl 10s', range: '9 nm',
+          description: 'Built of local stone on the Purbeck coast, giving a clear line west from Portland Bill and guiding vessels away from Christchurch Ledge towards the Solent.',
+          url: 'https://www.trinityhouse.co.uk/lighthouses-and-lightvessels/anvil-point-lighthouse',
+          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Anvil_Point_lighthouse.jpg'
+        }
+      ];
+
+
+      // ── localStorage helpers ─────────────────────────────────────────────────
+      var STORAGE_KEY = 'lhp_sw_status';
+
+      function loadStatuses() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        } catch (e) { return {}; }
+      }
+
+      function saveStatuses(statuses) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(statuses)); } catch (e) {}
+      }
+
+      var statuses = loadStatuses();
+
+      function getStatus(id) {
+        if (statuses.hasOwnProperty(id)) return statuses[id];
+        var lh = LIGHTHOUSES.find(function (l) { return l.id === id; });
+        return (lh && lh.visited) ? 'visited' : 'scheduled';
+      }
+
+      function toggleStatus(id) {
+        statuses[id] = getStatus(id) === 'visited' ? 'scheduled' : 'visited';
+        saveStatuses(statuses);
+        return statuses[id];
+      }
+
+      // ── Map initialisation ───────────────────────────────────────────────────
+      function createMarkerIcon(status) {
+        var cls = status === 'visited' ? 'lh-marker-visited' : 'lh-marker-scheduled';
+        return L.divIcon({
+          className: '',
+          html: '<div class="lh-marker-wrap ' + cls + '"></div>',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+          popupAnchor: [0, -14]
+        });
+      }
+
+      function buildPopupHTML(lh) {
+        var status = getStatus(lh.id);
+        var badgeClass = status === 'visited' ? 'visited' : 'scheduled';
+        var badgeLabel = status === 'visited' ? 'Visited' : 'Scheduled';
+
+        var imgHTML;
+        if (lh.image) {
+          imgHTML = '<img src="' + lh.image + '" class="lh-popup-img" alt="' + lh.name + '"'
+            + ' onerror="this.style.display=\'none\'">';
+        } else {
+          imgHTML = '<div class="lh-popup-img-missing">&#9956;</div>';
+        }
+
+        var specsHTML = '';
+        if (lh.built) specsHTML += '<div class="lh-spec-item"><strong>Built:</strong> ' + lh.built + '</div>';
+        if (lh.height) specsHTML += '<div class="lh-spec-item"><strong>Height:</strong> ' + lh.height + '</div>';
+        if (lh.character) specsHTML += '<div class="lh-spec-item"><strong>Character:</strong> ' + lh.character + '</div>';
+        if (lh.range) specsHTML += '<div class="lh-spec-item"><strong>Range:</strong> ' + lh.range + '</div>';
+        if (lh.automated) specsHTML += '<div class="lh-spec-item"><strong>Automated:</strong> ' + lh.automated + '</div>';
+
+        return '<div>'
+          + imgHTML
+          + '<div class="lh-popup-body">'
+          + '<div class="lh-popup-title-row">'
+          + '<h4 class="lh-popup-name">' + lh.name + '</h4>'
+          + '<button class="lh-status-badge ' + badgeClass + '" data-lh-id="' + lh.id + '">' + badgeLabel + '</button>'
+          + '</div>'
+          + '<p class="lh-popup-location"><i class="fas fa-map-marker-alt" style="color:#1e3d53;margin-right:4px;font-size:.65rem"></i>' + lh.county + '</p>'
+          + '<p class="lh-popup-desc">' + lh.description + '</p>'
+          + (specsHTML ? '<div class="lh-popup-specs">' + specsHTML + '</div>' : '')
+          + '<a href="' + lh.url + '" target="_blank" rel="noopener" class="lh-popup-link">View on Trinity House ↗</a>'
+          + '</div>'
+          + '</div>';
+      }
+
+      function updateProgressUI() {
+        var visited = LIGHTHOUSES.filter(function (lh) {
+          return getStatus(lh.id) === 'visited';
+        }).length;
+        var total = LIGHTHOUSES.length;
+        var pct = Math.round((visited / total) * 100);
+
+        var countEl = document.getElementById('visitedCount');
+        var barEl = document.getElementById('progressBarInner');
+        if (countEl) countEl.textContent = visited + ' / ' + total;
+        if (barEl) barEl.style.width = pct + '%';
+      }
+
+      function initMap() {
+        var map = L.map('lighthouse-map', {
+          center: [50.5, -4.5],
+          zoom: 8,
+          zoomControl: true,
+          attributionControl: true
+        });
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+          subdomains: 'abcd',
+          maxZoom: 19
+        }).addTo(map);
+
+        var markers = {};
+
+        LIGHTHOUSES.forEach(function (lh) {
+          var status = getStatus(lh.id);
+          var marker = L.marker([lh.lat, lh.lng], {
+            icon: createMarkerIcon(status),
+            title: lh.name,
+            riseOnHover: true
+          });
+
+          var popup = L.popup({ maxWidth: 300, className: 'lh-custom-popup' })
+            .setContent(buildPopupHTML(lh));
+
+          marker.bindPopup(popup);
+          marker.addTo(map);
+          markers[lh.id] = marker;
+        });
+
+        // Handle status toggle button clicks inside popups
+        map.on('popupopen', function (e) {
+          var container = e.popup.getElement();
+          var btn = container ? container.querySelector('.lh-status-badge') : null;
+          if (!btn) return;
+
+          btn.addEventListener('click', function () {
+            var id = btn.getAttribute('data-lh-id');
+            var newStatus = toggleStatus(id);
+            var lh = LIGHTHOUSES.find(function (l) { return l.id === id; });
+
+            // Update marker icon
+            if (markers[id]) {
+              markers[id].setIcon(createMarkerIcon(newStatus));
+            }
+
+            // Refresh popup content
+            if (lh) {
+              e.popup.setContent(buildPopupHTML(lh));
+            }
+
+            updateProgressUI();
+          });
+        });
+
+        updateProgressUI();
+        window.lighthouseMap = map;
+      }
+
+      // In fullPage.js mode, main.js calls window.initLighthouseMap() via afterLoad
+      // when the user navigates to the map section (ensures correct dimensions).
+      // On small screens fullPage.js is disabled, so all sections are visible at once —
+      // in that case we fall back to a short delay after DOMContentLoaded.
+      window.initLighthouseMap = function () {
+        if (window.lighthouseMap) return;
+        initMap();
+      };
+
+      function onReadyFallback() {
+        // Give main.js time to add 'ln-fullpage-active' if it's going to
+        setTimeout(function () {
+          if (!document.body.classList.contains('ln-fullpage-active')) {
+            window.initLighthouseMap();
+          }
+        }, 600);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', onReadyFallback);
+      } else {
+        onReadyFallback();
+      }
+
+    }());
+    </script>
+
   </body>
 </html>
-

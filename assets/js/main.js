@@ -139,6 +139,7 @@ License: https://themeforest.net/licenses/standard
             loopBottom: false,
             loopTop: false,
             scrollOverflow: true,
+            normalScrollElements: '.leaflet-container',
 
             //Accessibility
             animateAnchor: true,
@@ -191,6 +192,14 @@ License: https://themeforest.net/licenses/standard
                 $backtotop.removeClass('active');
               } else {
                 $backtotop.addClass('active');
+              }
+
+              if(anchorLink === 'the-map') {
+                if (!window.lighthouseMap && window.initLighthouseMap) {
+                  window.initLighthouseMap();
+                } else if (window.lighthouseMap) {
+                  setTimeout(function(){ window.lighthouseMap.invalidateSize(); }, 100);
+                }
               }
 
               $('.animated').each(function(){
