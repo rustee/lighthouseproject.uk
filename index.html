@@ -184,11 +184,11 @@
       }
       .lh-status-badge {
         flex-shrink: 0;
-        font-size: 0.62rem;
+        font-size: 0.58rem;
         font-weight: 700;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
-        padding: 3px 8px;
+        padding: 2px 6px;
         border-radius: 20px;
         cursor: pointer;
         border: none;
@@ -205,8 +205,8 @@
       }
       .lh-popup-specs {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4px 12px;
+        grid-template-columns: 1fr;
+        gap: 3px;
         font-size: 0.72rem;
         margin-bottom: 12px;
       }
@@ -278,21 +278,30 @@
         transition: border-color 0.2s;
       }
       .lh-instagram-link:hover { border-color: #C13584; color: #C13584; text-decoration: none; }
-      /* Responsive — disable fixed height on small screens */
+      /* Responsive */
       @media (max-width: 767px) {
-        .map-section { height: 85vh; }
-        .map-info-panel {
-          top: 70px;
-          left: 10px;
-          right: auto;
-          max-width: 160px;
-          padding: 10px 12px;
+        /* Panel above map, full width */
+        .map-section {
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
         }
-        .map-info-panel h3 { font-size: 0.72rem; }
+        .map-info-panel {
+          position: static;
+          top: auto; left: auto; right: auto;
+          max-width: none;
+          width: 100%;
+          border-radius: 0;
+          padding: 10px 16px;
+          box-sizing: border-box;
+        }
+        .map-info-panel h3 { font-size: 0.78rem; margin-bottom: 2px; }
         .map-info-panel .map-subtitle { display: none; }
-        .map-progress-bar { margin-bottom: 8px; }
+        .map-progress-bar { margin-bottom: 6px; }
+        .map-legend { flex-direction: row; gap: 14px; }
         .map-legend-item { font-size: 0.65rem; }
         .map-legend-dot { width: 9px; height: 9px; }
+        #lighthouse-map { flex: 1; min-height: 0; height: auto; }
         /* Narrow video popup on small screens */
         .lh-popup-layout { width: 300px; }
         .lh-popup-video-col { width: 112px; }
