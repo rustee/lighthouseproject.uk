@@ -224,7 +224,12 @@
         transition: border-color 0.2s;
       }
       .lh-popup-link:hover { border-color: #1e3d53; color: #1e3d53; text-decoration: none; }
-      /* Reel thumbnail with play button */
+      /* Reel video player */
+      .lh-reel-video {
+        width: 100%; height: 240px;
+        object-fit: cover; display: block; background: #000;
+      }
+      /* Thumbnail + play button fallback (no local MP4) */
       .lh-reel-wrap { position: relative; display: block; }
       .lh-reel-overlay {
         position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -481,7 +486,7 @@
         {
           id: 'lizard',
           visited: true,
-          reel: 'CtUdYNKOC5z',
+          reel: 'CtUdYNKOC5z', video: true,
           name: 'Lizard Lighthouse',
           lat: 49.9596, lng: -5.2005,
           county: 'Cornwall',
@@ -519,7 +524,7 @@
         {
           id: 'tater-du',
           visited: true,
-          reel: 'CtTdboRL1gZ',
+          reel: 'CtTdboRL1gZ', video: true,
           name: 'Tater Du Lighthouse',
           lat: 50.0511, lng: -5.5593,
           county: 'Cornwall',
@@ -545,7 +550,7 @@
         {
           id: 'pendeen',
           visited: true,
-          reel: 'CtKN54OPvF5',
+          reel: 'CtKN54OPvF5', video: true,
           name: 'Pendeen Lighthouse',
           lat: 50.1483, lng: -5.6411,
           county: 'Cornwall',
@@ -573,7 +578,7 @@
         {
           id: 'trevose-head',
           visited: true,
-          reel: 'Cuh2OBNJwIq',
+          reel: 'Cuh2OBNJwIq', video: true,
           name: 'Trevose Head Lighthouse',
           lat: 50.5480, lng: -5.0334,
           county: 'Cornwall',
@@ -625,7 +630,7 @@
         {
           id: 'start-point',
           visited: true,
-          reel: 'CyOkGOVLxmU',
+          reel: 'CyOkGOVLxmU', video: true,
           name: 'Start Point Lighthouse',
           lat: 50.2218, lng: -3.6446,
           county: 'Devon',
@@ -651,7 +656,7 @@
         {
           id: 'berry-head',
           visited: true,
-          reel: 'DKaJ9GsIcSg',
+          reel: 'DKaJ9GsIcSg', video: true,
           name: 'Berry Head Lighthouse',
           lat: 50.3972, lng: -3.4825,
           county: 'Devon',
@@ -665,7 +670,7 @@
         {
           id: 'bull-point',
           visited: true,
-          reel: 'Ctf0ccXoqRG',
+          reel: 'Ctf0ccXoqRG', video: true,
           name: 'Bull Point Lighthouse',
           lat: 51.1944, lng: -4.1997,
           county: 'Devon',
@@ -679,7 +684,7 @@
         {
           id: 'hartland-point',
           visited: true,
-          reel: 'CuSRTbYrorU',
+          reel: 'CuSRTbYrorU', video: true,
           name: 'Hartland Point Lighthouse',
           lat: 51.0140, lng: -4.5303,
           county: 'Devon',
@@ -693,7 +698,7 @@
         {
           id: 'lynmouth-foreland',
           visited: true,
-          reel: 'CuxO-KkueSJ',
+          reel: 'CuxO-KkueSJ', video: true,
           name: 'Lynmouth Foreland Lighthouse',
           lat: 51.2328, lng: -3.7831,
           county: 'Devon',
@@ -707,7 +712,7 @@
         {
           id: 'crow-point',
           visited: true,
-          reel: 'CxTWSvWr43F',
+          reel: 'CxTWSvWr43F', video: true,
           name: 'Crow Point Lighthouse',
           lat: 51.0769, lng: -4.2444,
           county: 'Devon',
@@ -746,7 +751,7 @@
         {
           id: 'lundy-north',
           visited: true,
-          reel: 'DOpwiNIAgK-',
+          reel: 'DOpwiNIAgK-', video: true,
           name: 'Lundy North Lighthouse',
           lat: 51.1988, lng: -4.6644,
           county: 'Lundy Island',
@@ -786,7 +791,7 @@
         {
           id: 'anvil-point',
           visited: true,
-          reel: 'C8FiolUILQw',
+          reel: 'C8FiolUILQw', video: true,
           name: 'Anvil Point Lighthouse',
           lat: 50.5975, lng: -1.9550,
           county: 'Dorset',
@@ -848,7 +853,12 @@
         var reelThumb = lh.reel ? 'assets/images/reels/' + lh.id + '.jpg' : null;
 
         var imgHTML;
-        if (reelThumb) {
+        if (lh.reel && lh.video) {
+          imgHTML = '<video class="lh-reel-video" controls playsinline preload="none"'
+            + ' poster="' + reelThumb + '">'
+            + '<source src="assets/video/reels/' + lh.id + '.mp4" type="video/mp4">'
+            + '</video>';
+        } else if (reelThumb) {
           imgHTML = '<a href="' + reelUrl + '" target="_blank" rel="noopener" class="lh-reel-wrap">'
             + '<img src="' + reelThumb + '" class="lh-popup-img" alt="' + lh.name + ' Instagram reel">'
             + '<div class="lh-reel-overlay"><div class="lh-play-btn">&#9654;</div></div>'
@@ -951,6 +961,13 @@
 
             updateProgressUI();
           });
+        });
+
+        map.on('popupclose', function (e) {
+          var container = e.popup.getElement();
+          if (!container) return;
+          var video = container.querySelector('video');
+          if (video) { video.pause(); }
         });
 
         updateProgressUI();
