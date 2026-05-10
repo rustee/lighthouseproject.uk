@@ -232,6 +232,28 @@
         flex-shrink: 0;
         background: #000;
       }
+      .lh-video-wrap { position: relative; }
+      .lh-fullscreen-btn {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        background: rgba(0,0,0,0.55);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        opacity: 0.65;
+        transition: opacity 0.15s;
+        z-index: 10;
+        pointer-events: auto;
+      }
+      .lh-video-wrap:hover .lh-fullscreen-btn { opacity: 1; }
       .lh-popup-text-col {
         flex: 1;
         overflow-y: auto;
@@ -905,9 +927,12 @@
         if (lh.reel && lh.video) {
           return '<div class="lh-popup-layout">'
             + '<div class="lh-popup-video-col">'
-            + '<video class="lh-reel-video" controls playsinline preload="none" poster="' + reelThumb + '">'
+            + '<div class="lh-video-wrap">'
+            + '<video class="lh-reel-video" autoplay playsinline preload="auto" poster="' + reelThumb + '">'
             + '<source src="assets/video/reels/' + lh.id + '.mp4" type="video/mp4">'
             + '</video>'
+            + '<button class="lh-fullscreen-btn" onclick="lhFullscreen(this)" aria-label="Full screen"><i class="fas fa-expand"></i></button>'
+            + '</div>'
             + '</div>'
             + '<div class="lh-popup-text-col lh-popup-body">' + bodyHTML + '</div>'
             + '</div>';
@@ -977,29 +1002,27 @@
           markers[lh.id] = marker;
         });
 
-        // Handle status toggle button clicks inside popups
+        // Handle status toggle and video autoplay
         map.on('popupopen', function (e) {
           var container = e.popup.getElement();
-          var btn = container ? container.querySelector('.lh-status-badge') : null;
-          if (!btn) return;
+          if (!container) return;
 
-          btn.addEventListener('click', function () {
-            var id = btn.getAttribute('data-lh-id');
-            var newStatus = toggleStatus(id);
-            var lh = LIGHTHOUSES.find(function (l) { return l.id === id; });
+          var btn = container.querySelector('.lh-status-badge');
+          if (btn) {
+            btn.addEventListener('click', function () {
+              var id = btn.getAttribute('data-lh-id');
+              var newStatus = toggleStatus(id);
+              var lh = LIGHTHOUSES.find(function (l) { return l.id === id; });
+              if (markers[id]) markers[id].setIcon(createMarkerIcon(newStatus));
+              if (lh) e.popup.setContent(buildPopupHTML(lh));
+              updateProgressUI();
+              var refreshedVid = e.popup.getElement().querySelector('video');
+              if (refreshedVid) refreshedVid.play().catch(function () {});
+            });
+          }
 
-            // Update marker icon
-            if (markers[id]) {
-              markers[id].setIcon(createMarkerIcon(newStatus));
-            }
-
-            // Refresh popup content
-            if (lh) {
-              e.popup.setContent(buildPopupHTML(lh));
-            }
-
-            updateProgressUI();
-          });
+          var video = container.querySelector('video');
+          if (video) video.play().catch(function () {});
         });
 
         map.on('popupclose', function (e) {
@@ -1017,6 +1040,14 @@
       // when the user navigates to the map section (ensures correct dimensions).
       // On small screens fullPage.js is disabled, so all sections are visible at once —
       // in that case we fall back to a short delay after DOMContentLoaded.
+      window.lhFullscreen = function (btn) {
+        var vid = btn.closest('.lh-video-wrap').querySelector('video');
+        if (!vid) return;
+        if (vid.requestFullscreen) vid.requestFullscreen();
+        else if (vid.webkitRequestFullscreen) vid.webkitRequestFullscreen();
+        else if (vid.webkitEnterFullscreen) vid.webkitEnterFullscreen();
+      };
+
       window.initLighthouseMap = function () {
         if (window.lighthouseMap) return;
         initMap();
