@@ -166,19 +166,21 @@
       .lh-popup-body {
         padding: 14px 16px 16px;
       }
-      .lh-popup-title-row {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 6px;
-      }
       .lh-popup-name {
         font-size: 0.95rem;
         font-weight: 700;
         color: #030507;
         line-height: 1.25;
-        margin: 0;
+        margin: 0 0 6px;
+      }
+      .lh-popup-location {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        font-size: 0.75rem;
+        color: #768394;
+        margin: 0 0 8px;
       }
       .lh-status-badge {
         flex-shrink: 0;
@@ -195,11 +197,6 @@
       }
       .lh-status-badge.visited  { background: #d4f8e3; color: #0c7a38; }
       .lh-status-badge.scheduled { background: #fef3dc; color: #a1640a; }
-      .lh-popup-location {
-        font-size: 0.75rem;
-        color: #768394;
-        margin: 0 0 8px;
-      }
       .lh-popup-desc {
         font-size: 0.78rem;
         color: #4a5260;
@@ -886,11 +883,11 @@
         if (lh.range) specsHTML += '<div class="lh-spec-item"><strong>Range:</strong> ' + lh.range + '</div>';
         if (lh.automated) specsHTML += '<div class="lh-spec-item"><strong>Automated:</strong> ' + lh.automated + '</div>';
 
-        var bodyHTML = '<div class="lh-popup-title-row">'
-          + '<h4 class="lh-popup-name">' + lh.name + '</h4>'
+        var bodyHTML = '<h4 class="lh-popup-name">' + lh.name + '</h4>'
+          + '<div class="lh-popup-location">'
+          + '<span><i class="fas fa-map-marker-alt" style="color:#1e3d53;margin-right:4px;font-size:.65rem"></i>' + lh.county + '</span>'
           + '<button class="lh-status-badge ' + badgeClass + '" data-lh-id="' + lh.id + '">' + badgeLabel + '</button>'
           + '</div>'
-          + '<p class="lh-popup-location"><i class="fas fa-map-marker-alt" style="color:#1e3d53;margin-right:4px;font-size:.65rem"></i>' + lh.county + '</p>'
           + '<p class="lh-popup-desc">' + lh.description + '</p>'
           + (specsHTML ? '<div class="lh-popup-specs">' + specsHTML + '</div>' : '')
           + '<a href="' + lh.url + '" target="_blank" rel="noopener" class="lh-popup-link">View on Trinity House ↗</a>'
